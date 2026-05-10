@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TradeVault — Trading Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome (minimal icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --bg: #0D1117;
+            --card: #161B22;
+            --text-primary: #E6EDF3;
+            --text-secondary: #8B949E;
+            --primary: #2F81F7;
+            --success: #2EA043;
+            --danger: #F85149;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.25s ease;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+        html {
+            font-size: 15px;
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+        /* RTL overrides */
+        html[dir="rtl"] .app-layout {
+            direction: rtl;
+        }
+        html[dir="rtl"] .sidebar {
+            border-right: none;
+            border-left: 1px solid var(--border);
+        }
+        html[dir="rtl"] .sidebar .nav-item i {
+            margin-right: 0;
+            margin-left: 12px;
+        }
+        html[dir="rtl"] .stat-row span:first-child {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+        html[dir="rtl"] .ai-message .avatar {
+            margin-right: 0;
+            margin-left: 12px;
+        }
+        html[dir="rtl"] .lang-toggle {
+            margin-left: 0;
+            margin-right: auto;
+        }
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        button {
+            cursor: pointer;
+            font-family: var(--font);
+            border: none;
+            background: none;
+            color: inherit;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: background var(--transition);
+        }
+        .sidebar-brand {
+            padding: 0 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .sidebar-brand i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0 12px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            text-decoration: none;
+        }
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .nav-item:hover {
+            background: rgba(47, 129, 247, 0.08);
+            color: var(--text-primary);
+        }
+        .nav-item.active {
+            background: rgba(47, 129, 247, 0.15);
+            color: var(--primary);
+        }
+        .sidebar-footer {
+            padding: 16px 20px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .lang-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            border: 1px solid var(--border);
+            margin-left: auto;
+        }
+        .lang-toggle:hover {
+            background: rgba(47, 129, 247, 0.12);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            padding: 28px 32px;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .page-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(46, 160, 67, 0.12);
+            color: var(--success);
+        }
+        .badge.danger {
+            background: rgba(248, 81, 73, 0.12);
+            color: var(--danger);
+        }
+        .badge.warn {
+            background: rgba(210, 153, 34, 0.12);
+            color: #D29922;
+        }
+        .badge.neutral {
+            background: rgba(139, 148, 158, 0.12);
+            color: var(--text-secondary);
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            transition: all var(--transition);
+            box-shadow: var(--shadow);
+        }
+        .card:hover {
+            border-color: rgba(47, 129, 247, 0.2);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .card-title i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+
+        /* ===== GRID ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .grid-auto {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        /* ===== STATS ===== */
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .stat-row span:first-child {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .stat-row span:last-child {
+            font-weight: 600;
+        }
+        .stat-change {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .stat-change.up {
+            background: rgba(46, 160, 67, 0.12);
+            color: var(--success);
+        }
+        .stat-change.down {
+            background: rgba(248, 81, 73, 0.12);
+            color: var(--danger);
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 6px 18px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+        }
+        .tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .tab.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* ===== AI CHAT ===== */
+        .ai-chat {
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--card);
+            overflow: hidden;
+        }
+        .ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .ai-message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeSlide 0.3s ease;
+        }
+        .ai-message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .ai-message .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(47, 129, 247, 0.15);
+            color: var(--primary);
+        }
+        .ai-message.user .avatar {
+            background: rgba(46, 160, 67, 0.15);
+            color: var(--success);
+        }
+        .ai-message .bubble {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+        .ai-message.user .bubble {
+            background: rgba(47, 129, 247, 0.08);
+            border-color: rgba(47, 129, 247, 0.15);
+        }
+        .ai-message .bubble .label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .ai-input-bar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .ai-input-bar input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 10px 18px;
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            outline: none;
+            transition: border var(--transition);
+        }
+        .ai-input-bar input:focus {
+            border-color: var(--primary);
+        }
+        .ai-input-bar input::placeholder {
+            color: var(--text-secondary);
+        }
+        .ai-input-bar button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+            flex-shrink: 0;
+        }
+        .ai-input-bar button:hover {
+            background: #1f6feb;
+            transform: scale(1.04);
+        }
+        .ai-input-bar button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== MISC ===== */
+        .flex {
+            display: flex;
+        }
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .gap-2 {
+            gap: 8px;
+        }
+        .gap-3 {
+            gap: 12px;
+        }
+        .gap-4 {
+            gap: 16px;
+        }
+        .mt-2 {
+            margin-top: 8px;
+        }
+        .mt-3 {
+            margin-top: 12px;
+        }
+        .mt-4 {
+            margin-top: 16px;
+        }
+        .mb-4 {
+            margin-bottom: 16px;
+        }
+        .w-full {
+            width: 100%;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+        .text-success {
+            color: var(--success);
+        }
+        .text-danger {
+            color: var(--danger);
+        }
+        .text-primary {
+            color: var(--primary);
+        }
+        .fw-600 {
+            font-weight: 600;
+        }
+        .fs-small {
+            font-size: 0.8rem;
+        }
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 0;
+        }
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 64px;
+                padding: 12px 0;
+            }
+            .sidebar-brand span,
+            .nav-item span,
+            .sidebar-footer .lang-toggle span {
+                display: none;
+            }
+            .sidebar-brand {
+                justify-content: center;
+                padding: 0 8px 16px;
+            }
+            .sidebar-brand i {
+                font-size: 1.4rem;
+            }
+            .nav-item {
+                justify-content: center;
+                padding: 10px;
+            }
+            .nav-item i {
+                margin: 0;
+                font-size: 1.1rem;
+            }
+            .sidebar-footer {
+                justify-content: center;
+                padding: 12px 8px 0;
+            }
+            .lang-toggle {
+                padding: 6px 10px;
+            }
+            .lang-toggle span {
+                display: none !important;
+            }
+            .main-content {
+                padding: 20px 16px;
+            }
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            .page-title {
+                font-size: 1.2rem;
+            }
+            .ai-message {
+                max-width: 100%;
+            }
+            .stat-value {
+                font-size: 1.4rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 16px 12px;
+            }
+            .card {
+                padding: 16px;
+            }
+            table {
+                font-size: 0.75rem;
+            }
+            th,
+            td {
+                padding: 8px 10px;
+            }
+        }
+
+        /* RTL adjustments for sidebar on small screens */
+        html[dir="rtl"] .sidebar {
+            border-left: 1px solid var(--border);
+            border-right: none;
+        }
+        html[dir="rtl"] .nav-item i {
+            margin-left: 0;
+        }
+        @media (max-width:768px) {
+            html[dir="rtl"] .sidebar {
+                border-left: none;
+            }
+        }
+
+        /* scrollable table container */
+        .table-scroll {
+            overflow-x: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        .table-scroll table {
+            min-width: 700px;
+        }
+
+        /* school color dots */
+        .school-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* confetti for AI trade gen */
+        .trade-card {
+            background: rgba(46, 160, 67, 0.04);
+            border: 1px solid rgba(46, 160, 67, 0.15);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            margin-top: 8px;
+        }
+        .trade-card .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.85rem;
+        }
+        .trade-card .row .lbl {
+            color: var(--text-secondary);
+        }
+        .trade-card .row .val {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <!-- React & Babel -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.0/babel.min.js">
+    </script>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useCallback, useRef, createContext, useContext, useMemo } = React;
+
+        // ============================================================
+        //  TRANSLATIONS
+        // ============================================================
+        const EN = {
+            app: 'TradeVault',
+            dashboard: 'Dashboard',
+            markets: 'Markets',
+            timeframes: 'Timeframes',
+            schools: 'Schools',
+            trades: 'Trades',
+            statistics: 'Statistics',
+            backlist: 'Backlist',
+            settings: 'Settings',
+            ai: 'AI Assistant',
+            lang: 'العربية',
+            search: 'Ask the AI anything...',
+            genTrade: 'Generate Educational Trade',
+            loading: 'Thinking...',
+            noData: 'No data available.',
+            active: 'Active',
+            closed: 'Closed',
+            winRate: 'Win Rate',
+            tp1Rate: 'TP1 Hit Rate',
+            tp2Rate: 'TP2 Hit Rate',
+            slBefore: 'SL Before TP1',
+            slAfter: 'SL After TP1',
+            profitFactor: 'Profit Factor',
+            avgRR: 'Avg R:R',
+            bestSession: 'Best Session',
+            bestHour: 'Best Hour',
+            bestDay: 'Best Day',
+            totalTrades: 'Total Trades',
+            symbol: 'Symbol',
+            timeframe: 'Timeframe',
+            school: 'School',
+            entry: 'Entry',
+            sl: 'SL',
+            tp1: 'TP1',
+            tp2: 'TP2',
+            status: 'Status',
+            result: 'Result',
+            direction: 'Direction',
+            buy: 'Buy',
+            sell: 'Sell',
+            profit: 'Profit',
+            loss: 'Loss',
+            open: 'Open',
+            hit: 'Hit',
+            pending: 'Pending',
+            confidence: 'Confidence',
+            strong: 'Strong',
+            medium: 'Medium',
+            weak: 'Weak',
+            trend: 'Trend',
+            bullish: 'Bullish',
+            bearish: 'Bearish',
+            neutral: 'Neutral',
+            overview: 'Overview',
+            performance: 'Performance',
+            comparison: 'Comparison',
+            all: 'All',
+            noTrades: 'No trades yet.',
+            backlistHint: 'Backlisted items appear here.',
+            settingsHint: 'Platform settings.',
+            aiWelcome: 'Hello! I can analyze all platform data, answer questions, and generate educational trades. Try asking me something!',
+            aiCap1: '• "Why did SMC give a buy signal?"',
+            aiCap2: '• "What is the trend on XAUUSD H4?"',
+            aiCap3: '• "Which timeframe is strongest today?"',
+            aiCap4: '• "Generate an educational trade"',
+            livePrices: 'Live Prices',
+            activeTrades: 'Active Trades',
+            closedTrades: 'Closed Trades',
+            signals: 'Signals',
+            schoolCompare: 'School Comparison',
+            tfCompare: 'Timeframe Comparison',
+            symCompare: 'Symbol Comparison',
+            statsUpdate: 'Statistics update automatically after each closed trade.',
+            educationalOnly: 'Educational purposes only. Not financial advice.',
+        };
+
+        const AR = {
+            app: 'تريد فولت',
+            dashboard: 'لوحة القيادة',
+            markets: 'الأسواق',
+            timeframes: 'الأطر الزمنية',
+            schools: 'المدارس',
+            trades: 'الصفقات',
+            statistics: 'الإحصائيات',
+            backlist: 'القائمة السوداء',
+            settings: 'الإعدادات',
+            ai: 'المساعد الذكي',
+            lang: 'English',
+            search: 'اسأل المساعد الذكي...',
+            genTrade: 'توليد صفقة تعليمية',
+            loading: 'جارٍ التفكير...',
+            noData: 'لا توجد بيانات متاحة.',
+            active: 'نشط',
+            closed: 'مغلقة',
+            winRate: 'معدل الربح',
+            tp1Rate: 'معدل ضرب TP1',
+            tp2Rate: 'معدل ضرب TP2',
+            slBefore: 'SL قبل TP1',
+            slAfter: 'SL بعد TP1',
+            profitFactor: 'معامل الربح',
+            avgRR: 'متوسط R:R',
+            bestSession: 'أفضل جلسة',
+            bestHour: 'أفضل ساعة',
+            bestDay: 'أفضل يوم',
+            totalTrades: 'إجمالي الصفقات',
+            symbol: 'الرمز',
+            timeframe: 'الإطار الزمني',
+            school: 'المدرسة',
+            entry: 'الدخول',
+            sl: 'وقف الخسارة',
+            tp1: 'الهدف الأول',
+            tp2: 'الهدف الثاني',
+            status: 'الحالة',
+            result: 'النتيجة',
+            direction: 'الاتجاه',
+            buy: 'شراء',
+            sell: 'بيع',
+            profit: 'ربح',
+            loss: 'خسارة',
+            open: 'مفتوح',
+            hit: 'تحقق',
+            pending: 'معلق',
+            confidence: 'الثقة',
+            strong: 'قوي',
+            medium: 'متوسط',
+            weak: 'ضعيف',
+            trend: 'الاتجاه',
+            bullish: 'صاعد',
+            bearish: 'هابط',
+            neutral: 'محايد',
+            overview: 'نظرة عامة',
+            performance: 'الأداء',
+            comparison: 'مقارنة',
+            all: 'الكل',
+            noTrades: 'لا توجد صفقات بعد.',
+            backlistHint: 'العناصر المدرجة في القائمة السوداء تظهر هنا.',
+            settingsHint: 'إعدادات المنصة.',
+            aiWelcome: 'مرحباً! يمكنني تحليل جميع بيانات المنصة والإجابة على الأسئلة وتوليد صفقات تعليمية. جرب سؤالي!',
+            aiCap1: '• "لماذا أعطت SMC إشارة شراء؟"',
+            aiCap2: '• "ما هو الاتجاه على XAUUSD H4؟"',
+            aiCap3: '• "أي إطار زمني هو الأقوى اليوم؟"',
+            aiCap4: '• "توليد صفقة تعليمية"',
+            livePrices: 'الأسعار الحية',
+            activeTrades: 'الصفقات النشطة',
+            closedTrades: 'الصفقات المغلقة',
+            signals: 'الإشارات',
+            schoolCompare: 'مقارنة المدارس',
+            tfCompare: 'مقارنة الأطر الزمنية',
+            symCompare: 'مقارنة الرموز',
+            statsUpdate: 'يتم تحديث الإحصائيات تلقائياً بعد كل صفقة مغلقة.',
+            educationalOnly: 'لأغراض تعليمية فقط. ليست نصيحة مالية.',
+        };
+
+        const LANG = { en: EN, ar: AR };
+
+        // ============================================================
+        //  CONTEXT
+        // ============================================================
+        const AppCtx = createContext();
+
+        function useApp() {
+            return useContext(AppCtx);
+        }
+
+        // ============================================================
+        //  MOCK DATA GENERATORS
+        // ============================================================
+        const SCHOOLS_LIST = ['SMC', 'OrderFlow', 'ICT', 'PriceAction', 'SupplyDemand'];
+        const SYMBOLS_LIST = ['XAUUSD', 'BTCUSD', 'EURUSD', 'GBPUSD', 'ETHUSD'];
+        const TFS_LIST = ['M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+        const SESSIONS = ['Asian', 'London', 'NewYork', 'Pacific'];
+        const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const DIRECTIONS = ['buy', 'sell'];
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+
+        function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+        function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+
+        function genPrice(sym) {
+            const base = { XAUUSD: 2650, BTCUSD: 67500, EURUSD: 1.0850, GBPUSD: 1.2650, ETHUSD: 3450 };
+            const b = base[sym] || 100;
+            return b + rand(-b * 0.02, b * 0.02);
+        }
+
+        function genStats(sym, tf, school) {
+            const total = randInt(10, 80);
+            const wins = randInt(3, total);
+            const losses = total - wins;
+            const tp1Hits = randInt(0, wins);
+            const tp2Hits = randInt(0, wins - tp1Hits);
+            const slBefore = randInt(0, losses);
+            const slAfter = losses - slBefore;
+            const pf = wins / (losses || 1) * rand(0.8, 2.2);
+            const avgRR = rand(0.8, 3.5);
+            return {
+                winRate: total ? +(wins / total * 100).toFixed(1) : 0,
+                tp1HitRate: total ? +(tp1Hits / total * 100).toFixed(1) : 0,
+                tp2HitRate: total ? +(tp2Hits / total * 100).toFixed(1) : 0,
+                slBeforeTP1: slBefore,
+                slAfterTP1: slAfter,
+                profitFactor: +pf.toFixed(2),
+                avgRR: +avgRR.toFixed(2),
+                bestSession: pick(SESSIONS),
+                bestHour: randInt(0, 23) + ':00',
+                bestDay: pick(DAYS),
+                totalTrades: total,
+            };
+        }
+
+        function genTrade(sym, tf, school, idx) {
+            const dir = pick(DIRECTIONS);
+            const price = genPrice(sym);
+            const atr = price * rand(0.002, 0.015);
+            const entry = dir === 'buy' ? price - atr * rand(0.1, 0.4) : price + atr * rand(0.1, 0.4);
+            const sl = dir === 'buy' ? entry - atr * rand(0.8, 1.6) : entry + atr * rand(0.8, 1.6);
+            const tp1 = dir === 'buy' ? entry + atr * rand(0.8, 1.5) : entry - atr * rand(0.8, 1.5);
+            const tp2 = dir === 'buy' ? entry + atr * rand(1.8, 3.0) : entry - atr * rand(1.8, 3.0);
+            const isClosed = Math.random() > 0.35;
+            let result = 'open';
+            if (isClosed) {
+                const r = Math.random();
+                if (r < 0.35) result = 'tp1';
+                else if (r < 0.50) result = 'tp2';
+                else if (r < 0.75) result = 'sl';
+                else result = 'sl_after_tp1';
+            }
+            const closedAt = isClosed ? Date.now() - randInt(1000, 86400000 * 7) : null;
+            return {
+                id: `${sym}-${tf}-${school}-${idx}-${Date.now()}-${randInt(0,9999)}`,
+                symbol: sym,
+                timeframe: tf,
+                school: school,
+                direction: dir,
+                entry: +entry.toFixed(2),
+                sl: +sl.toFixed(2),
+                tp1: +tp1.toFixed(2),
+                tp2: +tp2.toFixed(2),
+                status: isClosed ? 'closed' : 'active',
+                result: result,
+                openAt: Date.now() - randInt(1000, 86400000 * 14),
+                closedAt: closedAt,
+                pnl: isClosed ? (result === 'tp1' ? rand(0.5, 1.8) : result === 'tp2' ? rand(1.8, 4.0) : -rand(0.5, 2.0)) :
+                    0,
+                rr: isClosed ? (result === 'tp1' ? rand(0.8, 1.5) : result === 'tp2' ? rand(1.8, 3.5) : -rand(0.8, 1.6)) : 0,
+            };
+        }
+
+        function genAllTrades() {
+            const trades = [];
+            let idx = 0;
+            for (const sym of SYMBOLS_LIST) {
+                for (const tf of TFS_LIST) {
+                    for (const sc of SCHOOLS_LIST) {
+                        const n = randInt(1, 5);
+                        for (let i = 0; i < n; i++) {
+                            trades.push(genTrade(sym, tf, sc, idx++));
+                        }
+                    }
+                }
+            }
+            return trades;
+        }
+
+        function genPrices() {
+            const p = {};
+            for (const s of SYMBOLS_LIST) p[s] = +genPrice(s).toFixed(2);
+            return p;
+        }
+
+        function genSignals() {
+            const sigs = [];
+            for (const s of SYMBOLS_LIST) {
+                for (const tf of TFS_LIST) {
+                    for (const sc of SCHOOLS_LIST) {
+                        if (Math.random() > 0.65) {
+                            sigs.push({
+                                symbol: s,
+                                timeframe: tf,
+                                school: sc,
+                                direction: pick(DIRECTIONS),
+                                strength: pick(['weak', 'medium', 'strong']),
+                                atr: +rand(10, 200).toFixed(1),
+                                generated: Date.now() - randInt(0, 86400000),
+                            });
+                        }
+                    }
+                }
+            }
+            return sigs;
+        }
+
+        // ============================================================
+        //  STATS ENGINE
+        // ============================================================
+        function computeStats(trades, sym, tf, school) {
+            let filtered = trades;
+            if (sym) filtered = filtered.filter(t => t.symbol === sym);
+            if (tf) filtered = filtered.filter(t => t.timeframe === tf);
+            if (school) filtered = filtered.filter(t => t.school === school);
+
+            const closed = filtered.filter(t => t.status === 'closed');
+            const total = closed.length;
+            if (!total) return null;
+
+            const wins = closed.filter(t => t.result === 'tp1' || t.result === 'tp2');
+            const losses = closed.filter(t => t.result === 'sl' || t.result === 'sl_after_tp1');
+            const tp1Hits = closed.filter(t => t.result === 'tp1').length;
+            const tp2Hits = closed.filter(t => t.result === 'tp2').length;
+            const slBefore = closed.filter(t => t.result === 'sl').length;
+            const slAfter = closed.filter(t => t.result === 'sl_after_tp1').length;
+
+            const totalProfit = wins.reduce((s, t) => s + t.pnl, 0);
+            const totalLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0)) || 1;
+            const pf = totalProfit / totalLoss;
+
+            const avgRR = closed.reduce((s, t) => s + t.rr, 0) / total;
+
+            // best session/hour/day from mock (we'll just pick random)
+            const sessions = ['Asian', 'London', 'NewYork', 'Pacific'];
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            return {
+                winRate: +(wins.length / total * 100).toFixed(1),
+                tp1HitRate: +(tp1Hits / total * 100).toFixed(1),
+                tp2HitRate: +(tp2Hits / total * 100).toFixed(1),
+                slBeforeTP1: slBefore,
+                slAfterTP1: slAfter,
+                profitFactor: +pf.toFixed(2),
+                avgRR: +avgRR.toFixed(2),
+                bestSession: pick(sessions),
+                bestHour: randInt(0, 23) + ':00',
+                bestDay: pick(days),
+                totalTrades: total,
+            };
+        }
+
+        // ============================================================
+        //  AI ENGINE (rule-based, uses platform data)
+        // ============================================================
+        function aiRespond(query, lang, trades, prices, signals, statsMap) {
+            const q = query.toLowerCase();
+            const t = lang === 'ar' ? AR : EN;
+
+            // Helper: find best school by win rate
+            function bestSchool() {
+                let best = null,
+                    bestWr = -1;
+                for (const sc of SCHOOLS_LIST) {
+                    const st = computeStats(trades, null, null, sc);
+                    if (st && st.winRate > bestWr) { bestWr = st.winRate;
+                        best = sc; }
+                }
+                return best;
+            }
+
+            function bestTF() {
+                let best = null,
+                    bestWr = -1;
+                for (const tf of TFS_LIST) {
+                    const st = computeStats(trades, null, tf, null);
+                    if (st && st.winRate > bestWr) { bestWr = st.winRate;
+                        best = tf; }
+                }
+                return best;
+            }
+
+            function symTrend(sym) {
+                const st = computeStats(trades, sym, null, null);
+                if (!st) return t.neutral;
+                return st.winRate > 55 ? t.bullish : st.winRate < 40 ? t.bearish : t.neutral;
+            }
+
+            // Check for educational trade generation
+            if (q.includes('generate') || q.includes('educational') || q.includes('trade') || q.includes('صفقة') || q.includes(
+                    'توليد')) {
+                const bestSc = bestSchool();
+                const bestTf = bestTF();
+                const sym = pick(SYMBOLS_LIST);
+                const dir = pick(DIRECTIONS);
+                const price = prices[sym] || 100;
+                const atr = price * 0.008;
+                const entry = dir === 'buy' ? price - atr * 0.2 : price + atr * 0.2;
+                const sl = dir === 'buy' ? entry - atr * 1.2 : entry + atr * 1.2;
+                const tp1 = dir === 'buy' ? entry + atr * 1.0 : entry - atr * 1.0;
+                const tp2 = dir === 'buy' ? entry + atr * 2.2 : entry - atr * 2.2;
+                const conf = bestSc && bestTf ? t.strong : t.medium;
+                const trendText = symTrend(sym);
+
+                let msg = `**${t.genTrade}**\n\n`;
+                msg += `📊 **${t.symbol}:** ${sym}  |  **${t.timeframe}:** ${bestTf || 'H1'}  |  **${t.school}:** ${bestSc || 'SMC'}\n\n`;
+                msg += `**${t.direction}:** ${dir === 'buy' ? t.buy : t.sell}\n`;
+                msg += `**${t.entry}:** ${entry.toFixed(2)}\n`;
+                msg += `**${t.sl}:** ${sl.toFixed(2)}\n`;
+                msg += `**${t.tp1}:** ${tp1.toFixed(2)}\n`;
+                msg += `**${t.tp2}:** ${tp2.toFixed(2)}\n\n`;
+                msg += `**${t.trend}:** ${trendText}\n`;
+                msg += `**${t.confidence}:** ${conf}\n\n`;
+                msg += `📌 *${t.educationalOnly}*`;
+                return msg;
+            }
+
+            // Why did [school] give a [direction] signal on [symbol]?
+            const schoolMatch = SCHOOLS_LIST.find(s => q.includes(s.toLowerCase()));
+            const symMatch = SYMBOLS_LIST.find(s => q.includes(s.toLowerCase()));
+            const dirMatch = q.includes('buy') ? 'buy' : q.includes('sell') ? 'sell' : null;
+
+            if (schoolMatch && (q.includes('signal') || q.includes('signals') || q.includes('إشارة'))) {
+                const sigs = signals.filter(s => s.school === schoolMatch && (!symMatch || s.symbol === symMatch) && (!dirMatch ||
+                    s.direction === dirMatch));
+                if (sigs.length === 0) {
+                    return `No recent signals from **${schoolMatch}**${symMatch ? ' on ' + symMatch : ''}.`;
+                }
+                const sig = sigs[0];
+                const st = computeStats(trades, sig.symbol, sig.timeframe, schoolMatch);
+                const wr = st ? st.winRate + '%' : 'N/A';
+                return `**${schoolMatch}** gave a **${sig.direction}** signal on **${sig.symbol} ${sig.timeframe}** (strength: ${sig.strength}).\n\n` +
+                    `📈 Win rate for ${schoolMatch} on ${sig.symbol} ${sig.timeframe}: ${wr}\n` +
+                    `🧠 Logic: ${sig.direction === 'buy' ? 'Price broke above key structure with strong momentum.' : 'Price broke below key structure with bearish confirmation.'}\n` +
+                    `📊 ATR: ${sig.atr.toFixed(1)}`;
+            }
+
+            // Trend on [symbol] [timeframe]
+            if ((q.includes('trend') || q.includes('اتجاه')) && symMatch) {
+                const tfMatch = TFS_LIST.find(tf => q.includes(tf.toLowerCase()));
+                const st = computeStats(trades, symMatch, tfMatch || null, null);
+                if (!st) return `Not enough data for **${symMatch}**${tfMatch ? ' ' + tfMatch : ''}.`;
+                const trend = st.winRate > 55 ? t.bullish : st.winRate < 40 ? t.bearish : t.neutral;
+                let msg = `**${symMatch}**${tfMatch ? ' ' + tfMatch : ''} ${t.trend.toLowerCase()}: **${trend}**\n`;
+                msg += `📊 Win Rate: ${st.winRate}% | Profit Factor: ${st.profitFactor} | Total Trades: ${st.totalTrades}`;
+                return msg;
+            }
+
+            // Which timeframe is strongest?
+            if (q.includes('timeframe') || q.includes('strongest') || q.includes('إطار') || q.includes('أقوى')) {
+                const best = bestTF();
+                if (!best) return 'Not enough data to determine.';
+                const st = computeStats(trades, null, best, null);
+                return `**${best}** is the strongest timeframe today.\n📈 Win Rate: ${st.winRate}% | Profit Factor: ${st.profitFactor} | Total Trades: ${st.totalTrades}`;
+            }
+
+            // Which school performs best on [symbol]?
+            if ((q.includes('school') || q.includes('مدرسة')) && symMatch) {
+                let best = null,
+                    bestWr = -1;
+                for (const sc of SCHOOLS_LIST) {
+                    const st = computeStats(trades, symMatch, null, sc);
+                    if (st && st.winRate > bestWr) { bestWr = st.winRate;
+                        best = sc; }
+                }
+                if (!best) return `Not enough data for **${symMatch}**.`;
+                const st = computeStats(trades, symMatch, null, best);
+                return `**${best}** performs best on **${symMatch}** with ${st.winRate}% win rate (${st.totalTrades} trades).`;
+            }
+
+            // General stats
+            if (q.includes('stats') || q.includes('statistics') || q.includes('إحصائيات')) {
+                const all = computeStats(trades, null, null, null);
+                if (!all) return 'No closed trades yet.';
+                return `📊 **Platform Statistics**\n\n` +
+                    `Win Rate: ${all.winRate}%\n` +
+                    `TP1 Hit Rate: ${all.tp1HitRate}%\n` +
+                    `TP2 Hit Rate: ${all.tp2HitRate}%\n` +
+                    `Profit Factor: ${all.profitFactor}\n` +
+                    `Avg R:R: ${all.avgRR}\n` +
+                    `Total Trades: ${all.totalTrades}`;
+            }
+
+            // Default
+            return `I understand you're asking about "${query}". I can analyze signals, trends, schools, timeframes, and generate educational trades. Try:\n\n` +
+                `• "Why did SMC give a buy signal?"\n` +
+                `• "What is the trend on XAUUSD H4?"\n` +
+                `• "Which timeframe is strongest today?"\n` +
+                `• "Generate an educational trade"`;
+        }
+
+        // ============================================================
+        //  MAIN APP
+        // ============================================================
+        function App() {
+            const [lang, setLang] = useState('en');
+            const [page, setPage] = useState('dashboard');
+            const [trades, setTrades] = useState([]);
+            const [prices, setPrices] = useState({});
+            const [signals, setSignals] = useState([]);
+            const [aiMessages, setAiMessages] = useState([]);
+            const [aiInput, setAiInput] = useState('');
+            const [aiLoading, setAiLoading] = useState(false);
+            const aiRef = useRef(null);
+
+            const t = LANG[lang];
+
+            // Init data
+            useEffect(() => {
+                setTrades(genAllTrades());
+                setPrices(genPrices());
+                setSignals(genSignals());
+                setAiMessages([{ role: 'ai', text: t.aiWelcome }]);
+            }, []);
+
+            // Update prices periodically
+            useEffect(() => {
+                const iv = setInterval(() => {
+                    setPrices(genPrices());
+                }, 3000);
+                return () => clearInterval(iv);
+            }, []);
+
+            // Auto-close some trades occasionally to simulate updates
+            useEffect(() => {
+                const iv = setInterval(() => {
+                    setTrades(prev => {
+                        const next = prev.map(t => {
+                            if (t.status === 'active' && Math.random() > 0.85) {
+                                const r = Math.random();
+                                let result = 'tp1';
+                                if (r < 0.25) result = 'tp2';
+                                else if (r < 0.55) result = 'sl';
+                                else if (r < 0.75) result = 'sl_after_tp1';
+                                return { ...t, status: 'closed', result, closedAt: Date.now() };
+                            }
+                            return t;
+                        });
+                        return next;
+                    });
+                }, 12000);
+                return () => clearInterval(iv);
+            }, []);
+
+            // Scroll AI chat
+            useEffect(() => {
+                if (aiRef.current) aiRef.current.scrollTop = aiRef.current.scrollHeight;
+            }, [aiMessages]);
+
+            const handleSend = useCallback(() => {
+                const q = aiInput.trim();
+                if (!q || aiLoading) return;
+                setAiMessages(prev => [...prev, { role: 'user', text: q }]);
+                setAiInput('');
+                setAiLoading(true);
+                setTimeout(() => {
+                    const reply = aiRespond(q, lang, trades, prices, signals, {});
+                    setAiMessages(prev => [...prev, { role: 'ai', text: reply }]);
+                    setAiLoading(false);
+                }, 600 + Math.random() * 600);
+            }, [aiInput, aiLoading, lang, trades, prices, signals]);
+
+            const handleKey = (e) => { if (e.key === 'Enter') handleSend(); };
+
+            const toggleLang = () => {
+                const next = lang === 'en' ? 'ar' : 'en';
+                setLang(next);
+                document.documentElement.lang = next;
+                document.documentElement.dir = next === 'ar' ? 'rtl' : 'ltr';
+            };
+
+            // Stats map for quick access
+            const statsMap = useMemo(() => {
+                const map = {};
+                for (const sym of SYMBOLS_LIST) {
+                    for (const tf of TFS_LIST) {
+                        for (const sc of SCHOOLS_LIST) {
+                            const key = `${sym}|${tf}|${sc}`;
+                            map[key] = computeStats(trades, sym, tf, sc);
+                        }
+                    }
+                }
+                return map;
+            }, [trades]);
+
+            // ============================================================
+            //  PAGES
+            // ============================================================
+            function DashboardPage() {
+                const allStats = computeStats(trades, null, null, null);
+                const activeCount = trades.filter(t => t.status === 'active').length;
+                const closedCount = trades.filter(t => t.status === 'closed').length;
+                const totalPnl = trades.filter(t => t.status === 'closed').reduce((s, t) => s + t.pnl, 0);
+
+                return (
+                    <div>
+                        <div className="page-header">
+                            <div>
+                                <div className="page-title">{t.dashboard}</div>
+                                <div className="page-subtitle">{t.statsUpdate}</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="badge"><i className="fas fa-circle" style={{ fontSize: 8 }}></i> {t
+                                    .livePrices}</span>
+                            </div>
+                        </div>
+
+                        {/* Stats cards */}
+                        <div className="grid-4">
+                            <div className="card">
+                                <div className="stat-label">{t.activeTrades}</div>
+                                <div className="stat-value">{activeCount}</div>
+                                <div className="stat-row mt-2">
+                                    <span>{t.closedTrades}</span>
+                                    <span>{closedCount}</span>
+                                </div>
+                            </div>
+                            <div className="card">
+                                <div className="stat-label">{t.winRate}</div>
+                                <div className="stat-value" style={{ color: (allStats?.winRate || 0) > 50 ? 'var(--success)' :
+                                        'var(--danger)' }}>
+                                    {allStats ? allStats.winRate + '%' : 'N/A'}
+                                </div>
+                                <div className="stat-row mt-2">
+                                    <span>{t.totalTrades}</span>
+                                    <span>{allStats?.totalTrades || 0}</span>
+                                </div>
+                            </div>
+                            <div className="card">
+                                <div className="stat-label">{t.profitFactor}</div>
+                                <div className="stat-value" style={{ color: (allStats?.profitFactor || 0) > 1 ? 'var(--success)' :
+                                        'var(--danger)' }}>
+                                    {allStats ? allStats.profitFactor : 'N/A'}
+                                </div>
+                                <div className="stat-row mt-2">
+                                    <span>{t.avgRR}</span>
+                                    <span>{allStats ? allStats.avgRR : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div className="card">
+                                <div className="stat-label">P&L (closed)</div>
+                                <div className="stat-value" style={{ color: totalPnl >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                                    {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(1)}R
+                                </div>
+                                <div className="stat-row mt-2">
+                                    <span>{t.bestSession}</span>
+                                    <span>{allStats?.bestSession || 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Live Prices */}
+                        <div className="card mt-4">
+                            <div className="card-header">
+                                <div className="card-title"><i className="fas fa-chart-line"></i>{t.livePrices}</div>
+                            </div>
+                            <div className="grid-auto">
+                                {Object.entries(prices).map(([sym, price]) => (
+                                    <div key={sym} className="flex items-center gap-3" style={{ padding: '8px 0' }}>
+                                        <span className="fw-600" style={{ minWidth: 80 }}>{sym}</span>
+                                        <span className="stat-value" style={{ fontSize: '1.2rem' }}>{price.toFixed(2)}</span>
+                                        <span className="badge neutral" style={{ fontSize: '0.7rem' }}>live</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Signals */}
+                        <div className="card mt-4">
+                            <div className="card-header">
+                                <div className="card-title"><i className="fas fa-bolt"></i>{t.signals}</div>
+                                <span className="badge">{signals.length} active</span>
+                            </div>
+                            <div className="table-scroll">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>{t.symbol}</th>
+                                            <th>{t.timeframe}</th>
+                                            <th>{t.school}</th>
+                                            <th>{t.direction}</th>
+                                            <th>{t.confidence}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {signals.slice(0, 12).map((s, i) => (
+                                            <tr key={i}>
+                                                <td className="fw-600">{s.symbol}</td>
+                                                <td>{s.timeframe}</td>
+                                                <td>{s.school}</td>
+                                                <td style={{ color: s.direction === 'buy' ? 'var(--success)' : 'var(--danger)' }}>
+                                                    {s.direction === 'buy' ? t.buy : t.sell}
+                                                </td>
+                                                <td>
+                                                    <span className={`badge ${s.strength === 'strong' ? '' : s.strength === 'medium' ? 'warn' : 'neutral'}`}
+                                                        style={{ fontSize: '0.7rem' }}>
+                                                        {s.strength}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {signals.length === 0 && (
+                                            <tr><td colSpan={5} className="text-center text-secondary">{t.noData}</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            function MarketsPage() {
+                return (
+                    <div>
+                        <div className="page-header">
+                            <div>
+                                <div className="page-title">{t.markets}</div>
+                                <div className="page-subtitle">{t.symCompare}</div>
+                            </div>
+                        </div>
+                        <div className="grid-auto">
+                            {SYMBOLS_LIST.map(sym => {
+                                const st = computeStats(trades, sym, null, null);
+                                return (
+                                    <div key={sym} className="card">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <span className="stat-value" style={{ fontSize: '1.3rem' }}>{sym}</span>
+                                            <span className="badge">{prices[sym]?.toFixed(2) || 'N/A'}</span>
+                                        </div>
+                                        {st ? (
+                                            <div style={{ fontSize: '0.85rem' }}>
+                                                <div className="stat-row"><span>{t.winRate}</span><span>{st.winRate}%</span></div>
+                                                <div className="stat-row"><span>{t.profitFactor}</span><span>{st.profitFactor}</span>
+                                                </div>
+                                                <div className="stat-row"><span>{t.totalTrades}</span><span>{st.totalTrades}</span>
+                                                </div>
+                                                <div className="stat-row"><span>{t.bestSession}</span><span>{st.bestSession}</span>
+                                                </div>
+                                            </div>
+                                        ) : <div className="text-secondary">{t.noData}</div>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+
+            function TimeframesPage() {
+                return (
+                    <div>
+                        <div className="page-header">
+                            <div>
+                                <div className="page-title">{t.timeframes}</div>
+                                <div className="page-subtitle">{t.tfCompare}</div>
+                            </div>
+                        </div>
+                        <div className="grid-auto">
+                            {TFS_LIST.map(tf => {
+                                const st = computeStats(trades, null, tf, null);
+                                return (
+                                    <div key={tf} className="card">
+                                        <div className="card-header">
+                                            <div className="card-title">{tf}</div>
+                                            {st && <span className="badge">{st.totalTrades} trades</span>}
+                                        </div>
+                                        {st ? (
+                                            <div style={{ fontSize: '0.85rem' }}>
+                                                <div className="stat-row"><span>{t.winRate}</span><span>{st.winRate}%</span></div>
+                                                <div className="stat-row"><span>{t.tp1Rate}</span><span>{st.tp1HitRate}%</span></div>
+                                                <div className="stat-row"><span>{t.tp2Rate}</span><span>{st.tp2HitRate}%</span></div>
+                                                <div className="stat-row"><span>{t.profitFactor}</span><span>{st.profitFactor}</span>
+                                                </div>
+                                                <div className="stat-row"><span>{t.avgRR}</span><span>{st.avgRR}</span></div>
+                                                <div className="stat-row"><span>{t.bestHour}</span><span>{st.bestHour}</span></div>
+                                            </div>
+                                        ) : <div className="text-secondary">{t.noData}</div>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+
+            function SchoolsPage() {
+                return (
+                    <div>
+                        <div className="page-header">
+                            <div>
+                                <div className="page-title">{t.schools}</div>
+                                <div className="page-subtitle">{t.schoolCompare}</div>
+                            </div>
+                        </div>
+                        <div className="grid-auto">
+                            {SCHOOLS_LIST.map(sc => {
+                                const st = computeStats(trades, null, null, sc);
+                                return (
+                                    <div key={sc} className="card">
+                                        <div className="card-header">
+                                            <div className="card-title flex items-center gap-2">
+                                                <span className="school-dot"
+                                                style={{ background: sc === 'SMC' ? 'var(--primary)' : sc === 'OrderFlow' ?
+                                                        'var(--success)' : sc === 'ICT' ? '#D29922' : sc === 'PriceAction' ?
+                                                        '#BC8CFF' : '#F85149' }}></span>
+                                                {sc}
+                                            </div>
+                                            {st && <span className="badge">{st.winRate}%</span>}
+                                        </div>
+                                        {st ? (
+                                            <div style={{ fontSize: '0.85rem' }}>
+                                                <div className="stat-row"><span>{t.winRate}</span><span>{st.winRate}%</span></div>
+                                                <div className="stat-row"><span>{t.tp1Rate}</span><span>{st.tp1HitRate}%</span></div>
+                                                <div className="stat-row"><span>{t.tp2Rate}</span><span>{st.tp2HitRate}%</span></div>
+                                                <div className="stat-row"><span>{t.slBefore}</span><span>{st.slBeforeTP1}</span>
+                                                </div>
+                                                <div className="stat-row"><span>{t.slAfter}</span><span>{st.slAfterTP1}</span></div>
+                                                <div className="stat-row"><span>{t.profitFactor}</span><span>{st.profitFactor}</span>
+                                                </div>
+                                                <div className="stat-row"><span>{t.avgRR}</span><span>{st.avgRR}</span></div>
+                                                <div className="stat-row"><span>{t.totalTrades}</span><span>{st.totalTrades}</span>
+                                                </div>
+                                            </div>
+                                        ) : <div className="text-secondary">{t.noData}</div>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            }
+
+            function TradesPage() {
+                const [filter, setFilter] = useState('all');
+                const filtered = filter === 'all' ? trades : trades.filter(t => t.status === filter);
+                return (
+                    <div>
+                        <div className="page-header">
+                            <div>
+                                <div className="page-title">{t.trades}</div>
+                                <div className="page-subtitle">{trades.filter(t => t.status === 'active').length} active
+                                    &middot; {trades.filter(t => t.status === 'closed').length} closed</div>
+                            </div>
+                            <div className="tabs">
+                                {['all', 'active', 'closed'].map(f => (
+                                    <button key={f} className={`tab ${filter === f ? 'active' : ''}`}
+                                    onClick={() => setFilter(f)}>
+                                        {f === 'all' ? t.all : f === 'active' ? t.active : t.closed}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>{t.symbol}</th>
+                                        <th>{t.timeframe}</th>
+                                        <th>{t.school}</th>
+                                        <th>{t.direction}</th>
+                                        <th>{t.entry}</th>
+                                        <th>{t.sl}</th>
+                                        <th>{t.tp1}</th>
+                                        <th>{t.tp2}</th>
+                                        <th>{t.status}</th>
+                                        <th>{t.result}</th>
+                                        <th>P&L</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filtered.slice(0, 50).map(trade => (
+                                        <tr key={trade.id}>
+                                            <td className="fw-600">{trade.symbol}</td>
+                                            <td>{trade.timeframe}</td>
+                                            <td>{trade.school}</td>
+                                            <td style={{ color: trade.direction === 'buy' ? 'var(--success)' : 'var(--danger)' }}>
+                                                {trade.direction === 'buy' ? t.buy : t.sell}
+                                            </td>
+                                            <td>{trade.entry.toFixed(2)}</td>
+                                            <td className="text-danger">{trade.sl.toFixed(2)}</td>
+                                            <td className="text-success">{trade.tp1.toFixed(2)}</td>
+                                            <td className="text-success">{trade.tp2.toFixed(2)}</td>
+                                            <td>
+                                                <span className={`badge ${trade.status === 'active' ? 'neutral' : ''}`}>
+                                                    {trade.status === 'active' ? t.open : t.closed}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {trade.status === 'closed' ? (
+                                                    <span className={`badge ${trade.result === 'tp1' || trade.result === 'tp2' ? '' : 'danger'}`}>
+                                                        {trade.result === 'tp1' ? t.tp1 : trade.result === 'tp2' ? t.tp2 : trade
+                                                            .result === 'sl' ? t.sl : 'SL+TP1'}
+                                                    </span>
+                                                ) : <span className="badge neutral">{t.pending}</span>}
+                                            </td>
+                                            <td className={trade.pnl >= 0 ? 'text-success' : 'text-danger'}>
+                                                {trade.status === 'closed' ? (trade.pnl >= 0 ? '+' : '') + trade.pnl.toFixed(
+                                                    1) + 'R
